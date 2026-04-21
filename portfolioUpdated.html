@@ -1,0 +1,1003 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Janvi Guleria — Portfolio</title>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>tailwind.config={theme:{extend:{fontFamily:{sans:["Plus Jakarta Sans","sans-serif"]}}}}</script>
+
+<style>
+/* ── Reset ───────────────────────────────────────────────── */
+*    { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { margin: 0; font-family: "Plus Jakarta Sans", sans-serif; }
+
+/* ── Skill bar animated fill ─────────────────────────────── */
+.skill-bar { transition: width 1.2s cubic-bezier(.4,0,.2,1); }
+
+/* ── Cards lift on hover ─────────────────────────────────── */
+.card       { transition: all .3s ease; }
+.card:hover { transform: translateY(-5px); box-shadow: 0 20px 45px rgba(0,0,0,.116); }
+
+/* ── Button base ─────────────────────────────────────────── */
+.btn { transition: all .25s ease; }
+
+/* Primary button — deep plum, turns lighter plum on hover */
+.btn-navy       { background: #6b1b50; color: #fff; border: none; cursor: pointer; }
+.btn-navy:hover { background: #843d6c; box-shadow: 0 8px 24px rgba(236,142,183,.35); }
+
+/* Outline button — turns plum border/text on hover */
+.btn-outline       { background: transparent; border: 2px solid #e5e7eb; color: #374151; cursor: pointer; }
+.btn-outline:hover { border-color: #843d6c; color: #dd3caa; }
+
+/* Work section filter pills */
+.filter-btn        { cursor: pointer; border: 1px solid #e5e7eb; background: #fff; color: #6b1b50; transition: all .2s; }
+.filter-btn.active { background: #6b1b50; color: #fff; border-color: #6b1b50; box-shadow: 0 4px 14px rgba(107,27,80,.3); }
+
+/* Footer social icons */
+.social-icon       { background: rgba(255,255,255,.12); transition: background .2s; cursor: pointer; border: none; color: #fff; }
+.social-icon:hover { background: #6b1b50; }
+
+/* Pulsing green dot */
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+.pulse { animation: pulse 2s infinite; }
+
+/* Fade-up entrance */
+@keyframes fadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+.fade { animation: fadeUp .7s ease both; }
+.d2   { animation-delay: .2s; }
+
+/* Focus ring on inputs */
+input:focus, select:focus, textarea:focus { outline: none; border-color: #6b1b50 !important; }
+
+/* Footer links */
+footer button.footer-link       { color: #d576b7; background: transparent; border: none; cursor: pointer; font-size: .75rem; transition: color .2s; }
+footer button.footer-link:hover { color: #fff; }
+
+/* ── Range slider (skill edit) ───────────────────────────── */
+input[type=range]                           { -webkit-appearance: none; width: 100%; height: 6px; border-radius: 99px; cursor: pointer; outline: none; }
+input[type=range]::-webkit-slider-thumb    { -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%; background: #6b1b50; border: 2px solid #fff; box-shadow: 0 0 0 2px #6b1b50; cursor: pointer; transition: background .2s; }
+input[type=range]::-webkit-slider-thumb:hover { background: #843d6c; }
+
+/* ── Project detail modal ────────────────────────────────── */
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.55); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 20px; animation: fadeIn .2s ease; }
+@keyframes fadeIn { from{opacity:0} to{opacity:1} }
+.modal-box     { background: #fff; border-radius: 20px; max-width: 700px; width: 100%; max-height: 90vh; overflow-y: auto; animation: slideUp .25s ease; }
+@keyframes slideUp { from{transform:translateY(30px);opacity:0} to{transform:translateY(0);opacity:1} }
+
+/* ── Success popup (form submitted) ─────────────────────── */
+.success-popup { position: fixed; top: 24px; right: 24px; z-index: 2000; background: #fff; border-radius: 16px; box-shadow: 0 8px 40px rgba(0,0,0,.15); padding: 20px 24px; min-width: 280px; border-left: 4px solid #22c55e; animation: slideInRight .35s ease; }
+@keyframes slideInRight { from{transform:translateX(120%);opacity:0} to{transform:translateX(0);opacity:1} }
+.success-popup.hiding { animation: slideOutRight .35s ease forwards; }
+@keyframes slideOutRight { to{transform:translateX(120%);opacity:0} }
+
+/* ── Responsive ──────────────────────────────────────────── */
+@media(max-width:768px){
+  .hidden-mobile                { display: none !important; }
+  .mobile-menu-btn              { display: block !important; }
+  .hero-grid,.about-grid,.skills-grid,.contact-grid,.footer-grid { grid-template-columns: 1fr !important; }
+  .projects-grid,.testimonials-grid { grid-template-columns: 1fr !important; }
+  .form-row                     { grid-template-columns: 1fr !important; }
+  .hero-title                   { font-size: 38px !important; }
+}
+</style>
+</head>
+
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+const { useState, useEffect, useRef } = React;
+
+// ================================================================
+//  DATA — edit these arrays to change any text on the site
+// ================================================================
+
+// Skills — pct is now editable via slider (click Edit button)
+const INITIAL_SKILLS = [
+  { name:"UX Research",                pct:90, icon:"👤" },
+  { name:"Interaction Design",         pct:88, icon:"📱" },
+  { name:"Visual Design",              pct:85, icon:"🎨" },
+  { name:"Frontend (React/Next.js)",   pct:82, icon:"⟨⟩" },
+  { name:"Prototyping (Figma, Framer)",pct:90, icon:"🔧" },
+  { name:"Accessibility / WCAG",       pct:78, icon:"♿" },
+  { name:"Node.js / APIs",             pct:70, icon:"🗄"  },
+];
+
+const TOOLS = [
+  "Figma","React","Next.js",
+  "TypeScript","Tailwind CSS","Framer Motion",
+  "Node.js","PostgreSQL","Git",
+  "Vercel","Notion","Miro",
+  "Adobe Creative Suite","Webflow",
+];
+
+const PROCESS = [
+  "User Research","Prototyping",
+  "Information Architecture","Usability Testing",
+  "Wireframing","Design Systems",
+];
+
+const CATS = ["All","E-commerce","Healthcare","Education","Finance","Marketplace","Sustainability"];
+
+// Projects — id 2 and id 5 now have real images; all have full detail objects
+const PROJECTS = [
+  {
+    id:1, cat:"E-commerce", year:"2024",
+    title:"Nike-Phil knight",
+    role:"Lead Product Designer & Frontend Engineer",
+    tags:["Figma","React","Next.js"],
+    desc:"Redesigned a single-page checkout flow that reduced abandonment by 18% and improved conversion for mobile users.",
+    metric:"Reduced checkout steps from 5 → 3; A/B test +18% conversion lift.",
+    img: "image/e_commerce.jpeg",
+    details:{
+      overview:"Nike's checkout was a 5-step process plagued by confusion, form errors, and high cart abandonment. Users frequently dropped off at the payment stage due to unclear error states and excessive form fields.",
+      challenge:"Redesign the entire checkout from scratch without disrupting the existing backend. Key goals: reduce friction, improve mobile UX, and pass PCI compliance — all within a 6-week sprint.",
+      process:"Started with a full UX audit and 12 user interviews to identify 3 critical drop-off points. Wireframed 4 checkout flows and ran A/B tests with 500 users to find the most intuitive layout. Final implementation used React with real-time form validation.",
+      outcome:"The single-page checkout reduced steps from 5 to 3, cut average completion time from 4.2 min to 1.8 min, and delivered an 18% lift in conversion rate — translating to $340K additional annual revenue.",
+      tools:["Figma","React","Next.js","Stripe API","Hotjar","Google Optimize"],
+      duration:"6 weeks · 2024",
+    }
+  },
+  {
+    id:2, cat:"Healthcare", year:"2023",
+    title:"Johnsons&Johnson — Telemedicine Web App",
+    role:"Product Designer (UX)",
+    tags:["Figma","Miro","TypeScript"],
+    desc:"Built a modern telemedicine dashboard and appointment flow, improving appointment bookings and average session quality.",
+    metric:"+22% bookings month-over-month after release.",
+    img:"image/HealthCare.jpeg",
+    details:{
+      overview:"Beacon Health needed a patient-facing web portal for booking video consultations, viewing medical history, and receiving prescriptions digitally — all HIPAA-compliant.",
+      challenge:"Healthcare UX is uniquely high-stakes. The challenge was designing an interface clear enough for elderly and non-tech-savvy patients while maintaining clinical accuracy and full WCAG 2.1 AA accessibility.",
+      process:"Ran co-design sessions with 8 patients across different age groups and 3 clinicians. Prototype tested for accessibility. Built a modular Figma component library. Worked with the TypeScript dev team across 4 sprint cycles.",
+      outcome:"Post-launch data showed +22% month-over-month booking growth. Patient satisfaction scores improved from 3.6 to 4.7/5. Support tickets related to booking dropped by 41%.",
+      tools:["Figma","Miro","TypeScript","Storybook","Axe Accessibility"],
+      duration:"4 months · 2023",
+    }
+  },
+  {
+    id:3, cat:"Education", year:"2022",
+    title:"Physics Wallah — Learning Platform UX",
+    role:"Product Designer & Frontend Prototype",
+    tags:["Research","Prototyping","React"],
+    desc:"Designed curriculum browsing and recommendation UI that increased course enrollments and time-on-platform.",
+    metric:"+35% engagement on recommended content.",
+    img:"image/education.jpeg",
+    details:{
+      overview:"StudyStream serves 200K+ students. The existing course discovery was a flat list — no personalization, poor mobile layout, and zero recommendation logic, leading to shallow engagement.",
+      challenge:"Introduce intelligent content recommendations without overwhelming students. We had to make personalization feel human and trustworthy, especially for K-12 users.",
+      process:"Conducted competitive analysis of 6 platforms. Ran card sorting with 40 students to understand curriculum mental models. Built an interactive Figma prototype tested across 3 rounds with real learners.",
+      outcome:"Recommendation carousel drove +35% engagement on suggested content. Average session length grew from 12 to 19 minutes. Course completion rate improved by 14% within 90 days of launch.",
+      tools:["Figma","React","FigJam","Optimal Workshop","Maze"],
+      duration:"3 months · 2022",
+    }
+  },
+  {
+    id:4, cat:"Finance", year:"2024",
+    title:"Slate Finance — Dashboard Revamp",
+    role:"Senior UX Designer",
+    tags:["Data Viz","Figma","D3"],
+    desc:"Simplified complex dashboard workflows, reducing cognitive load for enterprise users and decreasing support tickets.",
+    metric:"Support tickets decreased by 28%.",
+    img:"https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=600&q=80",
+    details:{
+      overview:"Slate Finance is a B2B SaaS platform managing multi-entity accounting for mid-size businesses. The legacy dashboard had 60+ widgets with no hierarchy, causing analyst burnout and frequent errors.",
+      challenge:"Reduce cognitive overload while keeping all critical data visible — without re-engineering the data layer.",
+      process:"Ran a 2-week discovery sprint: shadowed 6 financial analysts, conducted job-story interviews, and mapped user workflows. Used card sorting to re-prioritize widget hierarchy. Prototyped a progressive disclosure model tested over 3 sprints.",
+      outcome:"Support ticket volume fell 28%. Time-to-insight for key financial metrics dropped from 4.5 min to 1.2 min. NPS among power users grew from 21 to 54 after the revamp.",
+      tools:["Figma","D3.js","Maze","Dovetail","Loom"],
+      duration:"5 months · 2024",
+    }
+  },
+  {
+    id:5, cat:"Marketplace", year:"2021",
+    title:"LocalLens — Photographer Marketplace",
+    role:"Product Designer & Frontend Engineer",
+    tags:["UX","UI","Next.js"],
+    desc:"Created seller onboarding flow and portfolio pages, improving seller activation and listing quality.",
+    metric:"Seller activation rate +14%.",
+    img:"https://images.unsplash.com/photo-1554080353-a576cf803bda?w=600&q=80",
+    details:{
+      overview:"LocalLens connects clients with local photographers. The seller side was struggling — photographers took an average of 11 days to complete onboarding and portfolio quality was inconsistent.",
+      challenge:"Designing for a creative audience: photographers care deeply about presentation, resent rigid templates, and find multi-step forms intimidating. Onboarding needed to feel inspiring, not bureaucratic.",
+      process:"Ran 10 in-depth interviews with photographers of varying experience. Identified top 3 barriers: unclear portfolio layout guidance, confusing pricing setup, and a broken mobile upload experience. Redesigned the full seller journey over 8 weeks.",
+      outcome:"Seller activation rate increased +14%. Time-to-first-booking dropped from 18 days to 9 days. Listing quality scores improved by 31% in the quarter following launch.",
+      tools:["Figma","Next.js","Cloudinary","Stripe Connect","Lottie"],
+      duration:"8 weeks · 2021",
+    }
+  },
+  {
+    id:6, cat:"Sustainability", year:"2023",
+    title:"EcoCart — Carbon Offset Checkout",
+    role:"UX Lead",
+    tags:["Payments","Ethics","Research"],
+    desc:"Integrated micro-donations and carbon offset options into checkout with clear UX and consent flows.",
+    metric:"9% of buyers opt-in for offset at checkout.",
+    img:"image/Sustain.jpeg",
+    details:{
+      overview:"EcoCart partnered with e-commerce retailers to offer voluntary carbon offsets at checkout. The goal was to design an ethical, non-manipulative opt-in UX that clearly communicated environmental impact without dark patterns.",
+      challenge:"Carbon offset UX is hard: users are skeptical of greenwashing, the topic is abstract, and adding friction to checkout always risks killing conversions. We had to be honest, clear, and unobtrusive.",
+      process:"Ran sentiment analysis on 500 user reviews of competitor climate features. Tested 6 consent copy variants to find language that felt trustworthy, not guilt-inducing. Built a transparent impact calculator showing CO₂ offset in relatable terms.",
+      outcome:"9% of buyers opted in — beating the industry benchmark of 4–6%. Average cart value for opt-in users was 12% higher. Zero complaint tickets about dark patterns; cited positively in 3 press reviews.",
+      tools:["Figma","Webflow","Stripe","Carbon API","Maze"],
+      duration:"10 weeks · 2023",
+    }
+  },
+];
+
+const TESTIMONIALS = [
+  { quote:"Janvi transformed our checkout experience — smarter flows and measurable lift.",    name:"Omar Singh", role:"Head of Product", company:"GroceryGo",    initials:"OS" },
+  { quote:"Excellent collaborator; Janvi blends research and execution seamlessly.",            name:"Mei Chen",   role:"VP Design",      company:"Beacon Health", initials:"MC" },
+  { quote:"Brought clarity to complex dashboards and improved our metrics noticeably.",         name:"Daniel Roy", role:"Product Lead",   company:"Slate Finance", initials:"DR" },
+];
+
+
+// ================================================================
+//  COUNTER  — animates 0 → end when scrolled into view
+// ================================================================
+function Counter({ end, suffix="" }) {
+  const [n, setN] = useState(0);
+  const ref = useRef();
+  useEffect(() => {
+    const obs = new IntersectionObserver(([e]) => {
+      if (e.isIntersecting) {
+        let v = 0; const step = end/50;
+        const t = setInterval(() => { v+=step; if(v>=end){setN(end);clearInterval(t);}else setN(Math.floor(v)); }, 30);
+        obs.disconnect();
+      }
+    });
+    if (ref.current) obs.observe(ref.current);
+    return () => obs.disconnect();
+  }, [end]);
+  return <span ref={ref}>{n}{suffix}</span>;
+}
+
+
+// ================================================================
+//  SKILL BAR  — animated fill bar + EDITABLE slider
+//  Click "Edit" to reveal a drag slider that changes the %
+//  onUpdate(name, newPct) saves the change back to App state
+// ================================================================
+function SkillBar({ skill, idx, onUpdate }) {
+  const [w,       setW]       = useState(0);
+  const [editing, setEditing] = useState(false);
+  const ref = useRef();
+
+  // Animate on scroll-into-view
+  useEffect(() => {
+    const obs = new IntersectionObserver(([e]) => {
+      if (e.isIntersecting) { setTimeout(() => setW(skill.pct), idx*100); obs.disconnect(); }
+    });
+    if (ref.current) obs.observe(ref.current);
+    return () => obs.disconnect();
+  }, [skill.pct, idx]);
+
+  // Keep bar in sync when slider moves
+  useEffect(() => { setW(skill.pct); }, [skill.pct]);
+
+  return (
+    <div ref={ref} style={{ marginBottom:24 }}>
+
+      {/* Name + % + Edit toggle */}
+      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:6 }}>
+        <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+          <span style={{ fontSize:16 }}>{skill.icon}</span>
+          <span style={{ fontSize:14, fontWeight:600, color:"#1f2937" }}>{skill.name}</span>
+        </div>
+        <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+          <span style={{ fontSize:13, fontWeight:700, color:"#6b1b50" }}>{skill.pct}%</span>
+          {/* Toggle the slider below */}
+          <button
+            onClick={() => setEditing(!editing)}
+            style={{
+              fontSize:11, padding:"2px 8px", borderRadius:6,
+              border:"1px solid #e5e7eb", cursor:"pointer", fontWeight:600,
+              background: editing ? "#6b1b50" : "#f9fafb",
+              color:       editing ? "#fff"    : "#6b7280",
+              transition:"all .2s"
+            }}>
+            {editing ? "Done" : "Edit"}
+          </button>
+        </div>
+      </div>
+
+      {/* Animated progress bar — gradient uses brand colors */}
+      <div style={{ height:8, background:"#f3f4f6", borderRadius:99, overflow:"hidden", marginBottom: editing ? 10 : 0 }}>
+        <div className="skill-bar" style={{
+          height:"100%", borderRadius:99, width:`${w}%`,
+          background:"linear-gradient(90deg, #6b1b50, #d576b7)"
+        }}/>
+      </div>
+
+      {/* Slider — only visible when editing is true */}
+      {editing && (
+        <div style={{ paddingTop:4 }}>
+          <input
+            type="range" min={0} max={100} value={skill.pct}
+            onChange={e => onUpdate(skill.name, parseInt(e.target.value))}
+            style={{ background:`linear-gradient(to right, #6b1b50 ${skill.pct}%, #e5e7eb ${skill.pct}%)` }}
+          />
+          <div style={{ display:"flex", justifyContent:"space-between", fontSize:10, color:"#9ca3af", marginTop:2 }}>
+            <span>0%</span><span>50%</span><span>100%</span>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+
+// ================================================================
+//  PROJECT CARD  — thumbnail + tags + "View Details" button
+//  onOpen(project) triggers the ProjectModal in App
+// ================================================================
+function ProjectCard({ p, onOpen }) {
+  return (
+    <div className="card" style={{ background:"#fff", borderRadius:16, overflow:"hidden", border:"1px solid #f3f4f6", boxShadow:"0 1px 4px rgba(0,0,0,.06)" }}>
+
+      {/* Thumbnail — all projects now have real images */}
+      <div style={{ height:210, overflow:"hidden" }}>
+        <img src={p.img} alt={p.title}
+          style={{ width:"100%", height:"100%", objectFit:"cover", transition:"transform .4s" }}
+          onMouseEnter={e => e.target.style.transform="scale(1.05)"}
+          onMouseLeave={e => e.target.style.transform="scale(1)"}
+        />
+      </div>
+
+      <div style={{ padding:24 }}>
+        {/* Tags + Year */}
+        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:12, flexWrap:"wrap", gap:6 }}>
+          <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>
+            {p.tags.map(t => <span key={t} style={{ fontSize:11, padding:"3px 9px", background:"#f3f4f6", borderRadius:6, color:"#4b5563", fontWeight:500 }}>{t}</span>)}
+          </div>
+          <span style={{ fontSize:11, color:"#9ca3af", fontWeight:600 }}>{p.year}</span>
+        </div>
+
+        {/* Title */}
+        <h3 style={{ fontSize:15, fontWeight:700, color:"#111827", marginBottom:4, lineHeight:1.4 }}>{p.title}</h3>
+
+        {/* Role — in brand plum */}
+        <p style={{ fontSize:13, fontWeight:600, color:"#6b1b50", marginBottom:12 }}>{p.role}</p>
+
+        {/* Short description */}
+        <p style={{ fontSize:13, color:"#6b7280", lineHeight:1.6, marginBottom:14 }}>{p.desc}</p>
+
+        {/* Metric box */}
+        <div style={{ background:"#f9fafb", borderRadius:10, padding:"10px 12px", marginBottom:14 }}>
+          <p style={{ fontSize:12, color:"#4b5563", margin:0 }}>{p.metric}</p>
+        </div>
+
+        {/* "View Details" → opens full case study modal */}
+        <button
+          onClick={() => onOpen(p)}
+          style={{ display:"flex", alignItems:"center", gap:6, fontSize:13, fontWeight:600, color:"#1f2937", background:"transparent", border:"none", cursor:"pointer", padding:0 }}
+          onMouseEnter={e => e.currentTarget.style.color="#6b1b50"}
+          onMouseLeave={e => e.currentTarget.style.color="#1f2937"}>
+          View Details <span style={{ fontSize:14 }}>→</span>
+        </button>
+      </div>
+    </div>
+  );
+}
+
+
+// ================================================================
+//  PROJECT MODAL  — full case study popup
+//  Shown when "View Details" is clicked on any project card.
+//  Clicking the dark overlay or ✕ button closes it.
+// ================================================================
+function ProjectModal({ project, onClose }) {
+  if (!project) return null;
+  const d = project.details;
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-box" onClick={e => e.stopPropagation()}>
+
+        {/* Hero image */}
+        <div style={{ height:260, overflow:"hidden", borderRadius:"20px 20px 0 0" }}>
+          <img src={project.img} alt={project.title} style={{ width:"100%", height:"100%", objectFit:"cover" }}/>
+        </div>
+
+        <div style={{ padding:32 }}>
+
+          {/* Header: tags, title, role + close button */}
+          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:20 }}>
+            <div>
+              <div style={{ display:"flex", gap:6, marginBottom:10, flexWrap:"wrap" }}>
+                {project.tags.map(t => <span key={t} style={{ fontSize:11, padding:"3px 9px", background:"#f3f4f6", borderRadius:6, color:"#4b5563", fontWeight:500 }}>{t}</span>)}
+                <span style={{ fontSize:11, padding:"3px 9px", background:"#fff0fa", borderRadius:6, color:"#6b1b50", fontWeight:600 }}>{d.duration}</span>
+              </div>
+              <h2 style={{ fontSize:22, fontWeight:900, color:"#111827", margin:"0 0 4px" }}>{project.title}</h2>
+              <p style={{ fontSize:13, fontWeight:600, color:"#6b1b50", margin:0 }}>{project.role}</p>
+            </div>
+            <button onClick={onClose}
+              style={{ width:36, height:36, borderRadius:"50%", border:"1px solid #e5e7eb", background:"#f9fafb", cursor:"pointer", fontSize:18, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+              ✕
+            </button>
+          </div>
+
+          {/* Case study sections: Overview, Challenge, Process, Outcome */}
+          {[
+            { label:"📌 Overview",  text:d.overview  },
+            { label:"⚡ Challenge", text:d.challenge },
+            { label:"🔍 Process",   text:d.process   },
+            { label:"🏆 Outcome",   text:d.outcome   },
+          ].map(s => (
+            <div key={s.label} style={{ marginBottom:22 }}>
+              <h4 style={{ fontSize:14, fontWeight:700, color:"#111827", marginBottom:8 }}>{s.label}</h4>
+              <p style={{ fontSize:13, color:"#4b5563", lineHeight:1.75, margin:0 }}>{s.text}</p>
+            </div>
+          ))}
+
+          {/* Tools used */}
+          <div>
+            <h4 style={{ fontSize:14, fontWeight:700, color:"#111827", marginBottom:10 }}>🛠 Tools Used</h4>
+            <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
+              {d.tools.map(tool => (
+                <span key={tool} style={{ fontSize:12, padding:"5px 12px", background:"#fff0fa", borderRadius:8, color:"#6b1b50", fontWeight:600 }}>{tool}</span>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+// ================================================================
+//  SUCCESS POPUP  — slides in from top-right after form submit
+//  Auto-dismisses after 4 seconds; can also be closed manually
+// ================================================================
+function SuccessPopup({ onClose }) {
+  const [hiding, setHiding] = useState(false);
+
+  useEffect(() => {
+    const h = setTimeout(() => setHiding(true),  3500);
+    const c = setTimeout(() => onClose(),         4000);
+    return () => { clearTimeout(h); clearTimeout(c); };
+  }, []);
+
+  return (
+    <div className={`success-popup ${hiding ? "hiding" : ""}`}>
+      <div style={{ display:"flex", alignItems:"flex-start", gap:14 }}>
+        <div style={{ width:44, height:44, borderRadius:"50%", background:"#f0fdf4", border:"2px solid #bbf7d0", display:"flex", alignItems:"center", justifyContent:"center", fontSize:20, flexShrink:0 }}>
+          ✅
+        </div>
+        <div style={{ flex:1 }}>
+          <p style={{ fontSize:14, fontWeight:700, color:"#111827", margin:"0 0 4px" }}>Message Sent!</p>
+          <p style={{ fontSize:12, color:"#6b7280", margin:0 }}>Thanks for reaching out. Janvi will get back to you within 24 hours.</p>
+        </div>
+        <button onClick={onClose} style={{ background:"transparent", border:"none", cursor:"pointer", color:"#9ca3af", fontSize:16, padding:0 }}>✕</button>
+      </div>
+    </div>
+  );
+}
+
+
+// ================================================================
+//  MAIN APP
+//  All sections rendered here in order:
+//  Nav → Hero → About → Skills → Work → Testimonials → Contact → Footer
+// ================================================================
+function App() {
+
+  // Skills stored in state so slider edits update the bars
+  const [skills,      setSkills]      = useState(INITIAL_SKILLS);
+
+  // Active filter tab in Work section
+  const [filter,      setFilter]      = useState("All");
+
+  // Project open in detail modal (null = closed)
+  const [activeProj,  setActiveProj]  = useState(null);
+
+  // Mobile hamburger open/closed
+  const [menu,        setMenu]        = useState(false);
+
+  // Textarea character count
+  const [chars,       setChars]       = useState(0);
+
+  // Navbar shadow when scrolled
+  const [scrolled,    setScrolled]    = useState(false);
+
+  // Contact form values
+  const [form,        setForm]        = useState({ name:"", email:"", type:"", details:"" });
+
+  // Success popup visible
+  const [showSuccess, setShowSuccess] = useState(false);
+
+  // Add shadow to nav on scroll
+  useEffect(() => {
+    const fn = () => setScrolled(window.scrollY > 20);
+    window.addEventListener("scroll", fn);
+    return () => window.removeEventListener("scroll", fn);
+  }, []);
+
+  // Smooth scroll helper
+  const goto = (id) => { document.getElementById(id)?.scrollIntoView({ behavior:"smooth" }); setMenu(false); };
+
+  // Update one skill's percentage from the slider
+  const updateSkill = (name, newPct) => setSkills(prev => prev.map(s => s.name===name ? {...s, pct:newPct} : s));
+
+  // Filtered project list
+  const filtered = filter==="All" ? PROJECTS : PROJECTS.filter(p => p.cat===filter);
+
+  // Form submit
+  const handleSubmit = () => {
+    if (!form.name || !form.email) { alert("Please enter at least your name and email."); return; }
+    setForm({ name:"", email:"", type:"", details:"" });
+    setChars(0);
+    setShowSuccess(true);
+  };
+
+  // Nav background — uses brand blush/pink tones from original file
+  const navStyle = {
+    position:"fixed", top:0, left:0, right:0, zIndex:500,
+    background:     scrolled ? "rgba(255,240,250,0.95)" : "rgb(255,240,250)",
+    boxShadow:      scrolled ? "0 1px 16px rgba(0,0,0,.08)" : "none",
+    backdropFilter: scrolled ? "blur(12px)" : "none",
+    transition:"all .3s",
+  };
+
+  return (
+    <div style={{ minHeight:"100vh", background:"#fff", color:"#111827" }}>
+
+      {/* Success popup — shown after form submit */}
+      {showSuccess && <SuccessPopup onClose={() => setShowSuccess(false)} />}
+
+      {/* Project detail modal — shown after "View Details" */}
+      {activeProj && <ProjectModal project={activeProj} onClose={() => setActiveProj(null)} />}
+
+
+      {/* ── NAVIGATION ───────────────────────────────────────── */}
+      <nav style={navStyle}>
+        <div style={{ maxWidth:1200, margin:"0 auto", padding:"16px 100px", paddingleft:"-1010px", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+          <span style={{ fontSize:20, fontWeight:900, letterSpacing:"-0.5px" }}>
+            Janvi <span style={{ color:"#6b1b50" }}>Guleria</span>
+          </span>
+
+          {/* Desktop links */}
+          <div style={{ display:"flex", gap:32, alignItems:"center" }} className="hidden-mobile">
+            {["About","Work","Skills","Contact"].map(l => (
+              <button key={l} onClick={() => goto(l.toLowerCase())}
+                style={{ fontSize:14, fontWeight:500, color:"#4b5563", background:"transparent", border:"none", cursor:"pointer", transition:"color .2s" }}
+                onMouseEnter={e => e.currentTarget.style.color="#6b1b50"}
+                onMouseLeave={e => e.currentTarget.style.color="#4b5563"}>
+                {l}
+              </button>
+            ))}
+            <button onClick={() => goto("contact")} className="btn btn-navy"
+              style={{ padding:"10px 20px", borderRadius:10, fontSize:13, fontWeight:700 }}>
+              Let's Talk
+            </button>
+          </div>
+
+          {/* Mobile hamburger */}
+          <button onClick={() => setMenu(!menu)}
+            style={{ display:"none", fontSize:22, background:"transparent", border:"none", cursor:"pointer" }}
+            className="mobile-menu-btn">
+            {menu ? "✕" : "☰"}
+          </button>
+        </div>
+
+        {/* Mobile dropdown */}
+        {menu && (
+          <div style={{ background:"#fff0fa", borderTop:"1px solid #f3d4ea", padding:"16px 24px", display:"flex", flexDirection:"column", gap:16 }}>
+            {["About","Work","Skills","Contact"].map(l => (
+              <button key={l} onClick={() => goto(l.toLowerCase())}
+                style={{ textAlign:"left", fontSize:15, fontWeight:600, color:"#374151", background:"transparent", border:"none", cursor:"pointer" }}>{l}</button>
+            ))}
+            <button onClick={() => goto("contact")} className="btn btn-navy"
+              style={{ padding:"12px", borderRadius:10, fontSize:13, fontWeight:700 }}>Let's Talk</button>
+          </div>
+        )}
+      </nav>
+
+      {/* Responsive rules */}
+      <style>{`
+        @media(max-width:768px){
+          .hidden-mobile{display:none!important}
+          .mobile-menu-btn{display:block!important}
+          .hero-grid,.about-grid,.skills-grid,.contact-grid,.footer-grid{grid-template-columns:1fr!important}
+          .projects-grid,.testimonials-grid{grid-template-columns:1fr!important}
+          .form-row{grid-template-columns:1fr!important}
+          .hero-title{font-size:38px!important}
+        }
+      `}</style>
+
+
+      {/* ── HERO ─────────────────────────────────────────────── */}
+      <section id="hero" style={{ minHeight:"100vh", display:"flex", alignItems:"center", paddingTop:100, paddingBottom:60, paddingLeft:24, paddingRight:24, background:"#fff" }}>
+        <div className="hero-grid" style={{ maxWidth:1200, margin:"0 auto", display:"grid", gridTemplateColumns:"1fr 1fr", gap:64, alignItems:"center", width:"100%" }}>
+
+          {/* LEFT: text */}
+          <div className="fade">
+            <div style={{ display:"inline-flex", alignItems:"center", gap:8, background:"#f0fdf4", border:"1px solid #bbf7d0", borderRadius:99, padding:"6px 16px", marginBottom:28 }}>
+              <span className="pulse" style={{ width:8, height:8, borderRadius:"50%", background:"#22c55e", display:"inline-block" }}/>
+              <span style={{ fontSize:12, fontWeight:600, color:"#15803d" }}>Available for new projects</span>
+            </div>
+            <h1 className="hero-title" style={{ fontSize:56, fontWeight:900, lineHeight:1.1, marginBottom:16, color:"#111827" }}>
+              Hi, I'm <span style={{ color:"#843d6c" }}>Janvi Guleria</span>
+            </h1>
+            <p style={{ fontSize:20, fontWeight:700, color:"#374151", marginBottom:16 }}>Designing simple products that scale.</p>
+            <p style={{ fontSize:15, color:"#6b7280", lineHeight:1.7, marginBottom:36, maxWidth:480 }}>
+              Product Designer & Frontend Engineer who blends product thinking with hands-on development to ship designs that perform in the real world.
+            </p>
+            <div style={{ display:"flex", gap:14, flexWrap:"wrap" }}>
+              <button onClick={() => goto("work")} className="btn btn-navy"
+                style={{ display:"flex", alignItems:"center", gap:8, padding:"14px 28px", borderRadius:12, fontSize:14, fontWeight:700, boxShadow:"0 4px 16px #843d6c" }}>
+                View Work →
+              </button>
+              <button onClick={() => goto("contact")} className="btn btn-outline"
+                style={{ display:"flex", alignItems:"center", gap:8, padding:"14px 28px", borderRadius:12, fontSize:14, fontWeight:700 }}>
+                Contact Me
+              </button>
+            </div>
+          </div>
+
+          {/* RIGHT: photo circle */}
+          <div className="fade d2" style={{ display:"flex", justifyContent:"center" }}>
+            <div style={{ position:"relative", width:360, height:360 }}>
+              <div style={{ position:"absolute", inset:0, borderRadius:"50%", border:"2px solid rgb(255,240,250)", background:"linear-gradient(135deg,rgba(255,240,250,1),rgba(27,42,107,.04))", display:"flex", alignItems:"center", justifyContent:"center" }}>
+                
+                <div style={{ width:296, height:296, borderRadius:"50%", overflow:"hidden", border:"4px solid #fff", boxShadow:"0 20px 60px rgba(0,0,0,.15)", background:"#f3f4f6", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", color:"#9ca3af", gap:8 }}>
+                  <div style={{ width:56, height:56, border:"2px solid #d1d5db", borderRadius:12, display:"flex", alignItems:"center", justifyContent:"center", fontSize:28 }}>🖼</div>
+                  <span style={{ fontSize:12 }}>Your Photo</span>
+                </div>
+              </div>
+              <div style={{ position:"absolute", bottom:-8, left:-32, background:"#fff", boxShadow:"0 8px 32px rgba(0,0,0,.12)", borderRadius:16, padding:"10px 18px", border:"1px solid #f3f4f6", whiteSpace:"nowrap" }}>
+                <span style={{ fontSize:13, fontWeight:700, color:"#6b1b50" }}>Available for projects</span>
+              </div>
+              <div style={{ position:"absolute", bottom:-16, right:-8, width:52, height:52, borderRadius:"50%", background:"rgb(255,240,250)", border:"2px solid rgba(255,240,250,.4)" }}/>
+            </div>
+          </div>
+        </div>
+      </section>
+
+
+      {/* ── ABOUT ────────────────────────────────────────────── */}
+      <section id="about" style={{ padding:"96px 24px", background:"#f9fafb" }}>
+        <div className="about-grid" style={{ maxWidth:1200, margin:"0 auto", display:"grid", gridTemplateColumns:"1fr 1fr", gap:64, alignItems:"center" }}>
+
+          {/* Photo */}
+          <div style={{ position:"relative" }}>
+            <div style={{ borderRadius:18, overflow:"hidden", height:440, boxShadow:"0 20px 60px rgba(0,0,0,.12)" }}>
+              {/* Using local image path from your file */}
+              <img src="image/Image1.jpeg" alt="Janvi"
+                style={{ width:"100%", height:"100%", objectFit:"cover" }}
+                onError={e => { e.target.style.display="none"; e.target.parentNode.style.background="#f3e0ee"; }}
+              />
+            </div>
+            <div style={{ position:"absolute", bottom:-12, right:-12, background:"#fff", boxShadow:"0 8px 32px rgba(0,0,0,.12)", borderRadius:16, padding:"10px 18px", border:"1px solid #f3f4f6" }}>
+              <span style={{ fontSize:13, fontWeight:700, color:"#1f2937" }}>Available for projects</span>
+            </div>
+          </div>
+
+          {/* Bio */}
+          <div>
+            <h2 style={{ fontSize:40, fontWeight:900, color:"#843d6c", marginBottom:10 }}>About Me</h2>
+            <div style={{ width:52, height:4, background:"#843d6c", borderRadius:99, marginBottom:24 }}/>
+            <p style={{ color:"#4b5563", lineHeight:1.75, marginBottom:16, fontSize:15 }}>
+              I'm Janvi Guleria — I design and build interfaces for web products. I blend product thinking with hands-on front-end development to ship designs that perform in the real world.
+            </p>
+            <p style={{ color:"#4b5563", lineHeight:1.75, marginBottom:28, fontSize:15 }}>
+              My process focuses on user-first research, rapid prototyping, and measurable outcomes. I work with startups and mid-size product teams to improve conversion, retention, and usability.
+            </p>
+            <button className="btn btn-navy"
+              style={{ display:"flex", alignItems:"center", gap:8, padding:"12px 22px", borderRadius:10, fontSize:13, fontWeight:700, marginBottom:36 }}>
+              ⬇ Download Janvi's Resume (PDF)
+            </button>
+            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:12 }}>
+              {[{v:50,s:"+",l:"Projects Delivered"},{v:5,s:"+",l:"Years Experience"},{v:98,s:"%",l:"Client Satisfaction"}].map(s => (
+                <div key={s.l} style={{ textAlign:"center" }}>
+                  <p style={{ fontSize:32, fontWeight:900, color:"#843d6c", margin:0 }}><Counter end={s.v} suffix={s.s}/></p>
+                  <p style={{ fontSize:11, color:"#843d6c", marginTop:4, fontWeight:500 }}>{s.l}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+
+      {/* ── SKILLS ───────────────────────────────────────────── */}
+      <section id="skills" style={{ padding:"96px 24px", background:"#fff" }}>
+        <div style={{ maxWidth:1200, margin:"0 auto" }}>
+          <div style={{ textAlign:"center", marginBottom:56 }}>
+            <h2 style={{ fontSize:38, fontWeight:900, color:"#111827", marginBottom:14 }}>Skills & Tools</h2>
+            <p style={{ color:"#6b7280", maxWidth:480, margin:"0 auto", fontSize:15 }}>
+              A blend of design thinking and technical expertise to deliver complete product experiences.
+            </p>
+            {/* Hint for the new interactive slider feature */}
+            <p style={{ color:"#6b1b50", fontSize:12, marginTop:8, fontWeight:600 }}>
+              💡 Click "Edit" next to any skill to adjust its percentage with a slider
+            </p>
+          </div>
+
+          <div className="skills-grid" style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:64 }}>
+
+            {/* Core Skills — each bar has an Edit button */}
+            <div>
+              <h3 style={{ fontSize:17, fontWeight:700, color:"#111827", marginBottom:28 }}>Core Skills</h3>
+              {skills.map((sk, i) => <SkillBar key={sk.name} skill={sk} idx={i} onUpdate={updateSkill}/>)}
+            </div>
+
+            {/* Tools + Design Process */}
+            <div>
+              <h3 style={{ fontSize:17, fontWeight:700, color:"#111827", marginBottom:28 }}>Tools & Technologies</h3>
+              <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:"14px 16px", marginBottom:32 }}>
+                {TOOLS.map(t => <div key={t} style={{ fontSize:13, color:"#374151", fontWeight:500, paddingBottom:10, borderBottom:"1px solid #f3f4f6" }}>{t}</div>)}
+              </div>
+              <div style={{ background:"#f9fafb", borderRadius:16, padding:24, border:"1px solid #f3f4f6" }}>
+                <h4 style={{ fontWeight:700, color:"#111827", marginBottom:16, fontSize:15 }}>Design Process</h4>
+                <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"10px 0" }}>
+                  {PROCESS.map(item => (
+                    <div key={item} style={{ display:"flex", alignItems:"center", gap:8, fontSize:13, color:"#4b5563" }}>
+                      <span style={{ width:7, height:7, borderRadius:"50%", background:"#843d6c", flexShrink:0, display:"inline-block" }}/>
+                      {item}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+
+      {/* ── FEATURED WORK ─────────────────────────────────────── */}
+      <section id="work" style={{ padding:"96px 24px", background:"#f9fafb" }}>
+        <div style={{ maxWidth:1200, margin:"0 auto" }}>
+          <div style={{ textAlign:"center", marginBottom:44 }}>
+            <h2 style={{ fontSize:38, fontWeight:900, color:"#111827", marginBottom:12 }}>Featured Work</h2>
+            <p style={{ color:"#6b7280", fontSize:15 }}>Recent projects where design meets measurable business impact.</p>
+          </div>
+
+          {/* Filter pills */}
+          <div style={{ display:"flex", gap:10, flexWrap:"wrap", justifyContent:"center", marginBottom:44 }}>
+            {CATS.map(c => (
+              <button key={c} onClick={() => setFilter(c)}
+                className={`filter-btn${filter===c?" active":""}`}
+                style={{ padding:"8px 20px", borderRadius:99, fontSize:13, fontWeight:600 }}>
+                {c}
+              </button>
+            ))}
+          </div>
+
+          {/* Project grid — passes setActiveProj as onOpen */}
+          <div className="projects-grid" style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:28 }}>
+            {filtered.map(p => <ProjectCard key={p.id} p={p} onOpen={setActiveProj}/>)}
+          </div>
+        </div>
+      </section>
+
+
+      {/* ── TESTIMONIALS ─────────────────────────────────────── */}
+      <section style={{ padding:"96px 24px", background:"#fff" }}>
+        <div style={{ maxWidth:1200, margin:"0 auto" }}>
+          <div style={{ textAlign:"center", marginBottom:56 }}>
+            <h2 style={{ fontSize:38, fontWeight:900, color:"#111827", marginBottom:12 }}>What Clients Say</h2>
+            <p style={{ color:"#6b7280", fontSize:15 }}>Feedback from teams I've had the pleasure to work with.</p>
+          </div>
+          <div className="testimonials-grid" style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:24 }}>
+            {TESTIMONIALS.map(t => (
+              <div key={t.name} className="card" style={{ background:"rgb(255,240,250)", borderRadius:18, padding:32, border:"1px solid #f3f4f6" }}>
+                <div style={{ width:48, height:48, borderRadius:12, background:"rgb(227,193,216)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:22, color:"#6b1b50", margin:"0 auto 20px" }}>❝</div>
+                <p style={{ color:"#374151", fontSize:13, lineHeight:1.7, textAlign:"center", marginBottom:20, fontStyle:"italic" }}>"{t.quote}"</p>
+                <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:16 }}>
+                  <div style={{ width:40, height:40, borderRadius:"50%", background:"#6b1b50", display:"flex", alignItems:"center", justifyContent:"center", color:"#fff", fontSize:11, fontWeight:700, flexShrink:0 }}>{t.initials}</div>
+                  <div>
+                    <p style={{ fontSize:13, fontWeight:700, color:"#111827", margin:0 }}>{t.name}</p>
+                    <p style={{ fontSize:11, color:"#6b7280", margin:0 }}>{t.role}</p>
+                  </div>
+                </div>
+                <div style={{ display:"flex", alignItems:"center", gap:8, paddingTop:14, borderTop:"1px solid #e5e7eb" }}>
+                  <span style={{ fontSize:14 }}>🏢</span>
+                  <span style={{ fontSize:13, fontWeight:600, color:"#843d6c" }}>{t.company}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div style={{ marginTop:52, display:"flex", flexWrap:"wrap", justifyContent:"center", gap:"8px 40px", fontSize:13, color:"#9ca3af", fontWeight:500 }}>
+            <span>Trusted by startups and</span><span>mid-size product teams</span>
+            <span>across various industries</span><span>worldwide</span>
+          </div>
+        </div>
+      </section>
+
+
+      {/* ── CONTACT ──────────────────────────────────────────── */}
+      <section id="contact" style={{ padding:"96px 24px", background:"#f9fafb" }}>
+        <div style={{ maxWidth:1200, margin:"0 auto" }}>
+          <div style={{ textAlign:"center", marginBottom:56 }}>
+            <h2 style={{ fontSize:38, fontWeight:900, color:"#111827", marginBottom:12 }}>Let's Work Together</h2>
+            <p style={{ color:"#6b7280", maxWidth:500, margin:"0 auto", fontSize:15 }}>
+              Have a project in mind? I'd love to hear about it. Let's discuss how we can bring your ideas to life.
+            </p>
+          </div>
+
+          <div className="contact-grid" style={{ display:"grid", gridTemplateColumns:"1fr 1.5fr", gap:48, alignItems:"start" }}>
+
+            {/* LEFT: Info + Budget */}
+            <div>
+              <h3 style={{ fontSize:18, fontWeight:700, color:"#111827", marginBottom:24 }}>Get in Touch</h3>
+              <div style={{ display:"flex", flexDirection:"column", gap:20, marginBottom:28 }}>
+                {[
+                  { icon:"✉️", l:"Email",         v:"janviguleria31@example.com" },
+                  { icon:"📍", l:"Location",      v:"Mohali, Chandigarh" },
+                  { icon:"📞", l:"Response Time", v:"Within 24 hours" },
+                ].map(item => (
+                  <div key={item.l} style={{ display:"flex", alignItems:"flex-start", gap:14 }}>
+                    <div style={{ width:40, height:40, borderRadius:10, background:"rgba(255,240,250,1)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:16, flexShrink:0 }}>{item.icon}</div>
+                    <div>
+                      <p style={{ fontSize:13, fontWeight:700, color:"#111827", margin:0 }}>{item.l}</p>
+                      <p style={{ fontSize:13, color:"#6b7280", margin:0 }}>{item.v}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div style={{ background:"#fff", borderRadius:16, padding:22, border:"1px solid #f3f4f6", boxShadow:"0 1px 4px rgba(0,0,0,.05)" }}>
+                <h4 style={{ fontWeight:700, color:"#111827", marginBottom:14, fontSize:15 }}>Project Budget</h4>
+                {["• UX/UI Design: $5k - $15k","• Web Development: $8k - $25k","• Full Product: $15k - $50k"].map(b => (
+                  <p key={b} style={{ fontSize:13, color:"#4b5563", margin:"0 0 7px" }}>{b}</p>
+                ))}
+                <p style={{ fontSize:11, color:"#9ca3af", fontStyle:"italic", margin:0 }}>Exact pricing depends on scope and timeline.</p>
+              </div>
+            </div>
+
+            {/* RIGHT: Form — Submit triggers success popup */}
+            <div style={{ background:"#fff", borderRadius:18, padding:32, border:"1px solid #f3f4f6", boxShadow:"0 1px 8px rgba(0,0,0,.06)" }}>
+              <h3 style={{ fontSize:17, fontWeight:700, color:"#111827", marginBottom:24 }}>Start a Conversation</h3>
+              <div style={{ display:"flex", flexDirection:"column", gap:18 }}>
+
+                {/* Name + Email */}
+                <div className="form-row" style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:14 }}>
+                  <div>
+                    <label style={{ fontSize:11, fontWeight:700, color:"#374151", display:"block", marginBottom:6 }}>Name *</label>
+                    <input type="text" placeholder="Your full name"
+                      value={form.name} onChange={e => setForm({...form, name:e.target.value})}
+                      style={{ width:"100%", border:"1px solid #e5e7eb", borderRadius:10, padding:"12px 14px", fontSize:13, color:"#111827", outline:"none", boxSizing:"border-box" }}/>
+                  </div>
+                  <div>
+                    <label style={{ fontSize:11, fontWeight:700, color:"#374151", display:"block", marginBottom:6 }}>Email *</label>
+                    <input type="email" placeholder="your@email.com"
+                      value={form.email} onChange={e => setForm({...form, email:e.target.value})}
+                      style={{ width:"100%", border:"1px solid #e5e7eb", borderRadius:10, padding:"12px 14px", fontSize:13, color:"#111827", outline:"none", boxSizing:"border-box" }}/>
+                  </div>
+                </div>
+
+                {/* Project type */}
+                <div>
+                  <label style={{ fontSize:11, fontWeight:700, color:"#374151", display:"block", marginBottom:6 }}>Project Type *</label>
+                  <select value={form.type} onChange={e => setForm({...form, type:e.target.value})}
+                    style={{ width:"100%", border:"1px solid #e5e7eb", borderRadius:10, padding:"12px 14px", fontSize:13, color:form.type?"#111827":"#9ca3af", outline:"none", background:"#fff", appearance:"none" }}>
+                    <option value="">Select project type</option>
+                    <option>UX/UI Design</option>
+                    <option>Web Development</option>
+                    <option>Full Product</option>
+                    <option>Consultation</option>
+                  </select>
+                </div>
+
+                {/* Details textarea */}
+                <div>
+                  <label style={{ fontSize:11, fontWeight:700, color:"#374151", display:"block", marginBottom:6 }}>Project Details *</label>
+                  <textarea rows={4} maxLength={500}
+                    placeholder="Tell me about your project, goals, timeline, and any specific requirements..."
+                    value={form.details}
+                    onChange={e => { setForm({...form, details:e.target.value}); setChars(e.target.value.length); }}
+                    style={{ width:"100%", border:"1px solid #e5e7eb", borderRadius:10, padding:"12px 14px", fontSize:13, color:"#111827", outline:"none", resize:"none", boxSizing:"border-box" }}/>
+                  <p style={{ fontSize:11, color:"#9ca3af", margin:"4px 0 0" }}>{chars}/500 characters</p>
+                </div>
+
+                {/* Submit → handleSubmit → SuccessPopup */}
+                <button onClick={handleSubmit} className="btn btn-navy"
+                  style={{ width:"100%", display:"flex", alignItems:"center", justifyContent:"center", gap:8, padding:"16px", borderRadius:12, fontSize:14, fontWeight:700, boxShadow:"0 4px 16px rgba(107,27,80,.2)" }}>
+                  ✉ Send Message
+                </button>
+
+                <p style={{ fontSize:11, color:"#9ca3af", textAlign:"center", margin:0 }}>
+                  By submitting this form, you agree to our privacy policy and terms of service.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+
+      {/* ── FOOTER ───────────────────────────────────────────── */}
+      <footer style={{ background:"#6b1b50", color:"#fff" }}>
+        <div className="footer-grid" style={{ maxWidth:1200, margin:"0 auto", padding:"64px 24px", display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:48 }}>
+
+          {/* Brand */}
+          <div>
+            <h3 style={{ fontSize:22, fontWeight:900, marginBottom:4 }}>Janvi Guleria</h3>
+            <p style={{ fontSize:13, color:"#fff", marginBottom:16 }}>Product Designer & Frontend Engineer</p>
+            <p style={{ fontSize:13, color:"#fff", lineHeight:1.7, marginBottom:20 }}>
+              Designing simple products that scale. I blend product thinking with hands-on development to ship designs that perform in the real world.
+            </p>
+            <div style={{ display:"flex", alignItems:"center", gap:8, fontSize:13, color:"#fff" }}>
+              <span>✉</span><span>janviguleria31@example.com</span>
+            </div>
+          </div>
+
+          {/* Quick Links */}
+          <div>
+            <h4 style={{ fontWeight:700, marginBottom:20, fontSize:15 }}>Quick Links</h4>
+            <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
+              {["About","Work","Skills","Contact"].map(l => (
+                <button key={l} onClick={() => goto(l.toLowerCase())} className="footer-link"
+                  style={{ textAlign:"left", background:"transparent", border:"none", cursor:"pointer", fontSize:13, color:"#fff" }}
+                  onMouseEnter={e => e.currentTarget.style.color="#f3d4ea"}
+                  onMouseLeave={e => e.currentTarget.style.color="#fff"}>
+                  {l}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Connect */}
+          <div>
+            <h4 style={{ fontWeight:700, marginBottom:20, fontSize:15 }}>Connect</h4>
+            <div style={{ display:"flex", gap:10, marginBottom:20 }}>
+              {[{l:"in",icon:"in"},{l:"gh",icon:"gh"},{l:"tw",icon:"tw"},{l:"gl",icon:"🌐"}].map(s => (
+                <button key={s.l} className="social-icon"
+                  style={{ width:40, height:40, borderRadius:10, display:"flex", alignItems:"center", justifyContent:"center", fontSize:13, fontWeight:700 }}>
+                  {s.icon}
+                </button>
+              ))}
+            </div>
+            <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
+              <p style={{ fontSize:13, color:"#fff", margin:0 }}>📍 Mohali, Chandigarh</p>
+              <p style={{ fontSize:13, color:"#fff", margin:0, display:"flex", alignItems:"center", gap:6 }}>
+                <span style={{ width:7, height:7, borderRadius:"50%", background:"#4ade80", display:"inline-block" }}/>
+                Available for projects
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Bottom bar */}
+        <div style={{ borderTop:"1px solid rgba(255,255,255,.1)" }}>
+          <div style={{ maxWidth:1200, margin:"0 auto", padding:"16px 24px", display:"flex", justifyContent:"space-between", alignItems:"center", flexWrap:"wrap", gap:12 }}>
+            <div style={{ display:"flex", gap:20, flexWrap:"wrap" }}>
+              <span style={{ fontSize:12, color:"#fff" }}>© 2026 Janvi Guleria. All rights reserved.</span>
+              {["Privacy Policy","Terms of Service"].map(l => (
+                <button key={l} style={{ fontSize:12, color:"#fff", background:"transparent", border:"none", cursor:"pointer" }}
+                  onMouseEnter={e => e.currentTarget.style.color="#f3d4ea"}
+                  onMouseLeave={e => e.currentTarget.style.color="#fff"}>{l}</button>
+              ))}
+            </div>
+            <button onClick={() => window.scrollTo({top:0,behavior:"smooth"})}
+              style={{ display:"flex", alignItems:"center", gap:6, fontSize:12, color:"#fff", background:"transparent", border:"none", cursor:"pointer" }}
+              onMouseEnter={e => e.currentTarget.style.color="#f3d4ea"}
+              onMouseLeave={e => e.currentTarget.style.color="#fff"}>
+              ↑ Back to Top
+            </button>
+          </div>
+        </div>
+
+        <div style={{ borderTop:"1px solid rgba(255,255,255,.08)", padding:"14px 24px", textAlign:"center" }}>
+          <p style={{ fontSize:12, color:"#fff", margin:0 }}>
+            Built with React, TypeScript, and Tailwind CSS. • Designed with accessibility and performance in mind.
+          </p>
+        </div>
+      </footer>
+
+    </div>
+  );
+}
+
+ReactDOM.render(<App/>, document.getElementById("root"));
+</script>
+</body>
+</html>

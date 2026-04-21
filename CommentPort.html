@@ -1,0 +1,985 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Janvi Guleria  — Portfolio</title>
+
+<!-- ============================================================
+  EXTERNAL LIBRARIES (loaded from internet, no install needed)
+  - React: the JavaScript framework that builds the UI
+  - ReactDOM: renders React components into the browser
+  - Babel: converts modern JSX/React code so browser understands it
+  - Google Fonts: loads the "Plus Jakarta Sans" font
+  - Tailwind CSS: utility classes for styling (like bg-white, flex, etc.)
+============================================================ -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com"></script>
+
+<!-- Tell Tailwind to use our custom font -->
+<script>tailwind.config={theme:{extend:{fontFamily:{sans:["Plus Jakarta Sans","sans-serif"]}}}}</script>
+
+<!-- ============================================================
+  GLOBAL CSS STYLES
+  These are reusable styles used throughout the whole page.
+  Instead of repeating the same styles everywhere, we define
+  them once here and just add the class name where needed.
+============================================================ -->
+<style>
+
+/* Makes all elements include padding/border inside their width */
+*{box-sizing:border-box}
+
+/* Smooth scroll when clicking nav links */
+html{scroll-behavior:smooth}
+
+/* Remove default spacing from the page body */
+body{margin:0;font-family:"Plus Jakarta Sans",sans-serif}
+
+/* Skill bar fill animates smoothly from 0% to target width */
+.skill-bar{transition:width 1.2s cubic-bezier(.4,0,.2,1)}
+
+/* Project cards lift up on hover */
+.card{transition:all .3s ease}
+.card:hover{transform:translateY(-5px);box-shadow:0 20px 45px rgba(0, 0, 0, 0.116)}
+
+/* Reusable button base style */
+.btn{transition:all .25s ease}
+
+/* Navy button (dark blue) — turns orange on hover */
+.btn-navy{background:#6b1b50;color:#fff;border:none;cursor:pointer}
+.btn-navy:hover{background:#843d6ccd;box-shadow:0 8px 24px rgba(236, 142, 183, 0.35)}
+
+/* Outline button (transparent with border) — border turns orange on hover */
+.btn-outline{background:transparent;border:2px solid #e5e7eb;color:#374151;cursor:pointer}
+.btn-outline:hover{border-color:#843d6ccd;color:#dd3caa}
+
+/* Filter buttons in the Work section */
+.filter-btn{cursor:pointer;border:1px solid #e5e7eb;background:#fff;color:#6b1b50;transition:all .2s}
+/* Active/selected filter button turns navy */
+.filter-btn.active{background:#6b1b50;color:#fff;border-color:#6b1b50;box-shadow:0 4px 14px rgba(27,42,107,.3)}
+
+/* Social media icon buttons in footer */
+.social-icon{background:rgba(255,255,255,.12);transition:background .2s;cursor:pointer;border:none;color:#fff}
+.social-icon:hover{background:#6b1b50}
+
+/* Pulsing green dot animation (Available for projects badge) */
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.pulse{animation:pulse 2s infinite}
+
+/* Fade up animation — elements slide up and appear on load */
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+.fade{animation:fadeUp .7s ease both}
+.d1{animation-delay:.1s}
+.d2{animation-delay:.2s}
+.d3{animation-delay:.3s}
+
+/* Input/textarea/select border turns orange when clicked */
+input:focus,select:focus,textarea:focus{outline:none;border-color:#6b1b50}
+
+/* Footer link styles */
+footer a,footer button.footer-link{color:#d576b7;background:transparent;border:none;cursor:pointer;font-size:.75rem;transition:color .2s}
+footer .footer-link:hover{color:#fff}
+</style>
+</head>
+
+<body>
+<!-- This empty div is where React will inject the entire website -->
+<div id="root"></div>
+
+<!-- ============================================================
+  ALL JAVASCRIPT / REACT CODE GOES INSIDE THIS SCRIPT TAG
+  type="text/babel" means Babel will process it before running
+============================================================ -->
+<script type="text/babel">
+
+// Pull React hooks out so we can use them directly
+const {useState, useEffect, useRef} = React;
+
+
+// ============================================================
+// DATA SECTION
+// All the content of the website is stored here as arrays.
+// To change text/data, just edit these arrays — nothing else!
+// ============================================================
+
+// Skills with name, percentage (for the progress bar), and icon
+const SKILLS = [
+  {name:"UX Research",         pct:90, icon:"👤"},
+  {name:"Interaction Design",  pct:88, icon:"📱"},
+  {name:"Visual Design",       pct:85, icon:"🎨"},
+  {name:"Frontend (React/Next.js)", pct:82, icon:"⟨⟩"},
+  {name:"Prototyping (Figma, Framer)", pct:90, icon:"🔧"},
+  {name:"Accessibility / WCAG",pct:78, icon:"♿"},
+  {name:"Node.js / APIs",      pct:70, icon:"🗄"},
+];
+
+// Tools listed in a grid in the Skills section
+const TOOLS = [
+  "Figma","React","Next.js",
+  "TypeScript","Tailwind CSS","Framer Motion",
+  "Node.js","PostgreSQL","Git",
+  "Vercel","Notion","Miro",
+  "Adobe Creative Suite","Webflow"
+];
+
+// Design process steps shown as bullet points
+const PROCESS = [
+  "User Research","Prototyping",
+  "Information Architecture","Usability Testing",
+  "Wireframing","Design Systems"
+];
+
+// Filter categories for the Work/Projects section
+const CATS = ["All","E-commerce","Healthcare","Education","Finance","Marketplace","Sustainability"];
+
+// All 6 portfolio projects
+// cat = category (used for filtering), img = project thumbnail
+const PROJECTS = [
+  {
+    id:1, cat:"E-commerce", year:"2024",
+    title:"GroceryGo — Checkout Redesign",
+    role:"Lead Product Designer & Frontend Engineer",
+    tags:["Figma","React","Next.js"],
+    desc:"Redesigned a single-page checkout flow that reduced abandonment by 18% and improved conversion for mobile users.",
+    metric:"Reduced checkout steps from 5 → 3; A/B test +18% conversion lift.",
+    img:"https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=600&q=80"
+  },
+  {
+    id:2, cat:"Healthcare", year:"2023",
+    title:"Beacon Health — Telemedicine Web App",
+    role:"Product Designer (UX)",
+    tags:["Figma","Miro","TypeScript"],
+    desc:"Built a modern telemedicine dashboard and appointment flow, improving appointment bookings and average session quality.",
+    metric:"+22% bookings month-over-month after release.",
+    img:"" // No image — will show placeholder
+  },
+  {
+    id:3, cat:"Education", year:"2022",
+    title:"StudyStream — Learning Platform UX",
+    role:"Product Designer & Frontend Prototype",
+    tags:["Research","Prototyping","React"],
+    desc:"Designed curriculum browsing and recommendation UI that increased course enrollments and time-on-platform.",
+    metric:"+35% engagement on recommended content.",
+    img:"https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=600&q=80"
+  },
+  {
+    id:4, cat:"Finance", year:"2024",
+    title:"Slate Finance — Dashboard Revamp",
+    role:"Senior UX Designer",
+    tags:["Data Viz","Figma","D3"],
+    desc:"Simplified complex dashboard workflows, reducing cognitive load for enterprise users and decreasing support tickets.",
+    metric:"Support tickets decreased by 28%.",
+    img:"https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=600&q=80"
+  },
+  {
+    id:5, cat:"Marketplace", year:"2021",
+    title:"LocalLens — Photographer Marketplace",
+    role:"Product Designer & Frontend Engineer",
+    tags:["UX","UI","Next.js"],
+    desc:"Created seller onboarding flow and portfolio pages, improving seller activation and listing quality.",
+    metric:"Seller activation rate +14%.",
+    img:"" // No image — will show placeholder
+  },
+  {
+    id:6, cat:"Sustainability", year:"2023",
+    title:"EcoCart — Carbon Offset Checkout",
+    role:"UX Lead",
+    tags:["Payments","Ethics","Research"],
+    desc:"Integrated micro-donations and carbon offset options into checkout with clear UX and consent flows.",
+    metric:"9% of buyers opt-in for offset at checkout.",
+    img:"https://images.unsplash.com/photo-1542601906897-c93d5e5e35d6?w=600&q=80"
+  },
+];
+
+// Client testimonials shown in the "What Clients Say" section
+const TESTIMONIALS = [
+  {
+    quote:"Janvi transformed our checkout experience — smarter flows and measurable lift.",
+    name:"Omar Singh", role:"Head of Product", company:"GroceryGo", initials:"OS"
+  },
+  {
+    quote:"Excellent collaborator; Janvi blends research and execution seamlessly.",
+    name:"Mei Chen", role:"VP Design", company:"Beacon Health", initials:"MC"
+  },
+  {
+    quote:"Brought clarity to complex dashboards and improved our metrics noticeably.",
+    name:"Daniel Roy", role:"Product Lead", company:"Slate Finance", initials:"DR"
+  },
+];
+
+
+// ============================================================
+// COUNTER COMPONENT
+// Animates a number from 0 up to the target (end) value.
+// Only starts counting when the element scrolls into view.
+// Used in the About section: 50+, 5+, 98%
+// ============================================================
+function Counter({end, suffix=""}) {
+  const [n, setN] = useState(0);       // current displayed number
+  const ref = useRef();                // reference to the DOM element
+
+  useEffect(() => {
+    // IntersectionObserver watches when the element enters the screen
+    const obs = new IntersectionObserver(([e]) => {
+      if (e.isIntersecting) {
+        let v = 0;
+        const step = end / 50;         // divide total into 50 small steps
+        const t = setInterval(() => {
+          v += step;
+          if (v >= end) {
+            setN(end);                 // snap to exact final number
+            clearInterval(t);
+          } else {
+            setN(Math.floor(v));       // show current step
+          }
+        }, 30);                        // update every 30ms
+        obs.disconnect();              // stop watching after it starts
+      }
+    });
+    if (ref.current) obs.observe(ref.current);
+    return () => obs.disconnect();
+  }, [end]);
+
+  return <span ref={ref}>{n}{suffix}</span>;
+}
+
+
+// ============================================================
+// SKILL BAR COMPONENT
+// Renders one skill row: icon + name on left, % on right,
+// and an animated progress bar below.
+// The bar fills from 0 to target % when scrolled into view.
+// ============================================================
+function SkillBar({skill, idx}) {
+  const [w, setW] = useState(0);   // bar width starts at 0%
+  const ref = useRef();
+
+  useEffect(() => {
+    const obs = new IntersectionObserver(([e]) => {
+      if (e.isIntersecting) {
+        // Stagger each bar by 100ms using its index (idx)
+        setTimeout(() => setW(skill.pct), idx * 100);
+        obs.disconnect();
+      }
+    });
+    if (ref.current) obs.observe(ref.current);
+    return () => obs.disconnect();
+  }, [skill.pct, idx]);
+
+  return (
+    <div ref={ref} style={{marginBottom:20}}>
+      {/* Top row: icon + skill name on left, percentage on right */}
+      <div style={{display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:6}}>
+        <div style={{display:"flex", alignItems:"center", gap:10}}>
+          <span style={{fontSize:16}}>{skill.icon}</span>
+          <span style={{fontSize:14, fontWeight:600, color:"#1f2937"}}>{skill.name}</span>
+        </div>
+        <span style={{fontSize:13, fontWeight:700, color:"#6b1b50"}}>{skill.pct}%</span>
+      </div>
+      {/* Progress bar track (gray background) */}
+      <div style={{height:8, background:"#f3f4f6", borderRadius:99, overflow:"hidden"}}>
+        {/* Progress bar fill (navy → orange gradient, animated) */}
+        <div className="skill-bar" style={{
+          height:"100%", borderRadius:99,
+          width:`${w}%`,
+          background:"linear-gradient(90deg, #6b1b50, #fff0fa)"
+        }}/>
+      </div>
+    </div>
+  );
+}
+
+
+// ============================================================
+// PROJECT CARD COMPONENT
+// Renders a single portfolio project card with:
+// - Image (or placeholder if no image)
+// - Tags, year, title, role, description, metric, link
+// ============================================================
+function ProjectCard({p}) {
+  return (
+    <div className="card" style={{
+      background:"#fff", borderRadius:16,
+      overflow:"hidden", border:"1px solid #f3f4f6",
+      boxShadow:"0 1px 4px rgba(0,0,0,.06)"
+    }}>
+      {/* Project thumbnail image area */}
+      <div style={{height:210, background:"#f9fafb", overflow:"hidden"}}>
+        {p.img
+          // If image URL exists, show it
+          ? <img src={p.img} alt={p.title} style={{width:"100%", height:"100%", objectFit:"cover"}}/>
+          // If no image, show a placeholder box
+          : <div style={{width:"100%", height:"100%", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:8, color:"#9ca3af"}}>
+              <div style={{width:48, height:48, border:"2px solid #d1d5db", borderRadius:10, display:"flex", alignItems:"center", justifyContent:"center", fontSize:24}}>🖼</div>
+              <span style={{fontSize:12}}>Image placeholder</span>
+            </div>
+        }
+      </div>
+
+      {/* Card content below the image */}
+      <div style={{padding:24}}>
+        {/* Tags (Figma, React etc.) + Year */}
+        <div style={{display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:12, flexWrap:"wrap", gap:6}}>
+          <div style={{display:"flex", gap:6, flexWrap:"wrap"}}>
+            {p.tags.map(t =>
+              <span key={t} style={{fontSize:11, padding:"3px 9px", background:"#f3f4f6", borderRadius:6, color:"#4b5563", fontWeight:500}}>{t}</span>
+            )}
+          </div>
+          <span style={{fontSize:11, color:"#9ca3af", fontWeight:600}}>{p.year}</span>
+        </div>
+
+        {/* Project title */}
+        <h3 style={{fontSize:15, fontWeight:700, color:"#111827", marginBottom:4, lineHeight:1.4}}>{p.title}</h3>
+
+        {/* Role in orange */}
+        <p style={{fontSize:13, fontWeight:600, color:"#6b1b50", marginBottom:12}}>{p.role}</p>
+
+        {/* Short project description */}
+        <p style={{fontSize:13, color:"#6b7280", lineHeight:1.6, marginBottom:14}}>{p.desc}</p>
+
+        {/* Key metric / result in a light gray box */}
+        <div style={{background:"#f9fafb", borderRadius:10, padding:"10px 12px", marginBottom:14}}>
+          <p style={{fontSize:12, color:"#4b5563", margin:0}}>{p.metric}</p>
+        </div>
+
+        {/* "View Case Study" link */}
+        <button
+          style={{display:"flex", alignItems:"center", gap:6, fontSize:13, fontWeight:600, color:"#1f2937", background:"transparent", border:"none", cursor:"pointer", padding:0}}
+          onMouseEnter={e => e.currentTarget.style.color="#E05C2A"}
+          onMouseLeave={e => e.currentTarget.style.color="#1f2937"}>
+          View Case Study <span style={{fontSize:14}}>→</span>
+        </button>
+      </div>
+    </div>
+  );
+}
+
+
+// ============================================================
+// MAIN APP COMPONENT
+// This is the entire page layout — all sections are here.
+// State variables control interactive behavior.
+// ============================================================
+function App() {
+  // Which filter is selected in the Work section ("All" by default)
+  const [filter, setFilter] = useState("All");
+
+  // Is the mobile hamburger menu open?
+  const [menu, setMenu] = useState(false);
+
+  // Character count for the contact form textarea
+  const [chars, setChars] = useState(0);
+
+  // Has the user scrolled down? (used to add shadow to navbar)
+  const [scrolled, setScrolled] = useState(false);
+
+  // Contact form field values
+  const [form, setForm] = useState({name:"", email:"", type:"", details:""});
+
+  // Listen for scroll events to detect if page has been scrolled
+  useEffect(() => {
+    const fn = () => setScrolled(window.scrollY > 20);
+    window.addEventListener("scroll", fn);
+    return () => window.removeEventListener("scroll", fn);
+  }, []);
+
+  // Filter projects based on selected category
+  const filtered = filter === "All" ? PROJECTS : PROJECTS.filter(p => p.cat === filter);
+
+  // Smooth scroll to a section by its id (e.g. "about", "work")
+  const goto = (id) => {
+    document.getElementById(id)?.scrollIntoView({behavior:"smooth"});
+    setMenu(false); // close mobile menu after clicking
+  };
+
+  // Navbar style changes when scrolled (adds blur + shadow)
+  const navStyle = {
+    position:"fixed", top:0, left:0, right:0, zIndex:50,
+    // background: scrolled ? "rgba(255,255,255,0.97)" : "#fff",
+    background: scrolled ? "rgba(255,240,250,0.9)" : "rgb(255,240,250)",
+    boxShadow: scrolled ? "0 1px 16px rgba(0,0,0,.08)" : "none",
+    backdropFilter: scrolled ? "blur(12px)" : "none",
+    transition:"all .3s"
+  };
+
+  return (
+    <div style={{minHeight:"100vh", background:"#fff", color:"#111827"}}>
+
+      {/* ==========================================================
+          NAVIGATION BAR
+          Fixed at top of page. Contains logo, nav links, CTA button.
+          On mobile: hamburger icon toggles a dropdown menu.
+      ========================================================== */}
+     
+  
+
+
+      <nav style={navStyle}>
+        <div style={{maxWidth:1200, margin:"0 auto", padding:"16px 70px", display:"flex", alignItems:"center", justifyContent:"space-between"}}>
+         
+  
+          {/* Logo / Name */}
+          <span style={{fontSize:20, fontWeight:900, letterSpacing:"-0.5px"}}>
+            Janvi <span style={{color:"#6b1b50"}}>Guleria</span>
+          </span>
+          
+
+
+          {/* Desktop nav links (hidden on mobile via CSS) */}
+          <div style={{display:"flex", gap:32, alignItems:"center"}} className="hidden-mobile">
+            {["About","Work","Skills","Contact"].map(l => (
+              <button key={l} onClick={() => goto(l.toLowerCase())}
+                style={{fontSize:14, fontWeight:500, color:"#4b5563", background:"transparent", border:"none", cursor:"pointer", transition:"color .2s"}}
+                onMouseEnter={e => e.currentTarget.style.color="#1B2A6B"}
+                onMouseLeave={e => e.currentTarget.style.color="#4b5563"}>
+                {l}
+              </button>
+            ))}
+            {/* "Let's Talk" CTA button — scrolls to Contact */}
+            <button onClick={() => goto("contact")} className="btn btn-navy"
+              style={{padding:"10px 20px", borderRadius:10, fontSize:13, fontWeight:700}}>
+              Let's Talk
+            </button>
+          </div>
+
+          {/* Mobile hamburger button (shown only on small screens) */}
+          <button onClick={() => setMenu(!menu)}
+            style={{display:"none", fontSize:22, background:"transparent", border:"none", cursor:"pointer"}}
+            className="mobile-menu-btn">
+            {menu ? "✕" : "☰"}
+          </button>
+        </div>
+
+        {/* Mobile dropdown menu */}
+        {menu && (
+          <div style={{background:"#fff", borderTop:"1px solid #f3f4f6", padding:"16px 24px", display:"flex", flexDirection:"column", gap:16}}>
+            {["About","Work","Skills","Contact"].map(l => (
+              <button key={l} onClick={() => goto(l.toLowerCase())}
+                style={{textAlign:"left", fontSize:15, fontWeight:600, color:"#374151", background:"transparent", border:"none", cursor:"pointer"}}>
+                {l}
+              </button>
+            ))}
+            <button onClick={() => goto("contact")} className="btn btn-navy"
+              style={{padding:"12px", borderRadius:10, fontSize:13, fontWeight:700}}>
+              Let's Talk
+            </button>
+          </div>
+        )}
+      </nav>
+
+      {/* Responsive CSS rules for mobile layout */}
+      <style>{`
+        @media(max-width:768px){
+          .hidden-mobile{display:none!important}
+          .mobile-menu-btn{display:block!important}
+          .hero-grid,.about-grid,.skills-grid,.contact-grid,.footer-grid{grid-template-columns:1fr!important}
+          .projects-grid,.testimonials-grid{grid-template-columns:1fr!important}
+          .form-row{grid-template-columns:1fr!important}
+          .hero-title{font-size:38px!important}
+        }
+      `}</style>
+
+
+      {/* ==========================================================
+          HERO SECTION
+          First thing visitors see. Full-screen height.
+          Left: greeting, name, tagline, description, 2 buttons.
+          Right: circular photo placeholder with floating badge.
+      ========================================================== */}
+      <section id="hero" style={{minHeight:"100vh", display:"flex", alignItems:"center", paddingTop:100, paddingBottom:60, paddingLeft:24, paddingRight:24}}>
+        <div className="hero-grid" style={{maxWidth:1200, margin:"0 auto", display:"grid", gridTemplateColumns:"1fr 1fr", gap:64, alignItems:"center", width:"100%"}}>
+
+          {/* LEFT SIDE: text content */}
+          <div className="fade">
+            {/* "Available for projects" green badge */}
+            <div style={{display:"inline-flex", alignItems:"center", gap:8, background:"rgb(255,240,250)", border:"1px solid #843d6ccd", borderRadius:99, padding:"6px 16px", marginBottom:28}}>
+              <span className="pulse" style={{width:8, height:8, borderRadius:"50%", background:"#6b1b50", display:"inline-block"}}></span>
+              <span style={{fontSize:12, fontWeight:600, color:"#843d6ccd"}}>Available for new projects</span>
+            </div>
+
+            {/* Main heading: "Hi, I'm Riya Kapoor" */}
+            <h1 className="hero-title" style={{fontSize:56, fontWeight:900, lineHeight:1.1, marginBottom:16, color:"#111827"}}>
+              Hi, I'm <span style={{color:"#843d6ccd"}}>Janvi Guleria</span>
+            </h1>
+
+            {/* Sub-heading */}
+            <p style={{fontSize:20, fontWeight:700, color:"#374151", marginBottom:16}}>
+              Designing simple products that scale.
+            </p>
+
+            {/* Description paragraph */}
+            <p style={{fontSize:15, color:"#6b7280", lineHeight:1.7, marginBottom:36, maxWidth:480}}>
+              Product Designer & Frontend Engineer who blends product thinking with hands-on development to ship designs that perform in the real world.
+            </p>
+
+            {/* Two action buttons */}
+            <div style={{display:"flex", gap:14, flexWrap:"wrap"}}>
+              {/* Primary: View Work (scrolls to work section) */}
+              <button onClick={() => goto("work")} className="btn btn-navy"
+                style={{display:"flex", alignItems:"center", gap:8, padding:"14px 28px", borderRadius:12, fontSize:14, fontWeight:700, boxShadow:"0 4px 16px #843d6ccd"}}>
+                View Work →
+              </button>
+              {/* Secondary: Contact Me (scrolls to contact section) */}
+              <button onClick={() => goto("contact")} className="btn btn-outline"
+                style={{display:"flex", alignItems:"center", gap:8, padding:"14px 28px", borderRadius:12, fontSize:14, fontWeight:700}}>
+                Contact Me
+              </button>
+            </div>
+          </div>
+
+          {/* RIGHT SIDE: circular photo area */}
+          <div className="fade d2" style={{display:"flex", justifyContent:"center"}}>
+            <div style={{position:"relative", width:360, height:360}}>
+              {/* Outer decorative ring */}
+              <div style={{position:"absolute", inset:0, borderRadius:"50%", border:"2px solid rgb(255,240,250)", background:"linear-gradient(135deg,rgba(255,240,250),rgba(27,42,107,.04))", display:"flex", alignItems:"center", justifyContent:"center"}}>
+                {/* Inner circle — REPLACE THIS with your actual <img> tag */}
+                <div style={{width:296, height:296, borderRadius:"50%", overflow:"hidden", border:"4px solid #fff", boxShadow:"0 20px 60px rgba(0,0,0,.15)", background:"#f3f4f6", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", color:"#9ca3af", gap:8}}>
+                  {/* 👇 TO ADD YOUR PHOTO: replace this div with:
+                      <img src="your-photo.jpg" style={{width:"100%",height:"100%",objectFit:"cover"}}/> */}
+                  <div style={{width:56, height:56, border:"2px solid #d1d5db", borderRadius:12, display:"flex", alignItems:"center", justifyContent:"center", fontSize:28}}>🖼</div>
+                  <span style={{fontSize:12}}>Your Photo</span>
+                </div>
+              </div>
+
+              {/* Floating "Available for projects" badge */}
+              <div style={{position:"absolute", bottom:-8, left:-32, background:"#fff", boxShadow:"0 8px 32px rgba(0,0,0,.12)", borderRadius:16, padding:"10px 18px", border:"1px solid #f3f4f6", whiteSpace:"nowrap"}}>
+                <span style={{fontSize:13, fontWeight:700, color:"#6b1b50"}}>Available for projects</span>
+              </div>
+
+              {/* Small decorative circle bottom-right */}
+              <div style={{position:"absolute", bottom:-16, right:-8, width:52, height:52, borderRadius:"50%", border:"2px solid rgba(268,240,250,04)", background:"rgb(255,240,250)"}}/>
+            </div>
+          </div>
+        </div>
+      </section>
+
+
+      {/* ==========================================================
+          ABOUT SECTION
+          Light gray background. Two-column layout.
+          Left: photo. Right: bio text, resume button, stats.
+      ========================================================== */}
+      <section id="about" style={{padding:"96px 24px", background:"#f9fafb"}}>
+        <div className="about-grid" style={{maxWidth:1200, margin:"0 auto", display:"grid", gridTemplateColumns:"1fr 1fr", gap:64, alignItems:"center"}}>
+
+          {/* LEFT: Profile photo */}
+          <div style={{position:"relative"}}>
+            <div style={{borderRadius:18, overflow:"hidden", height:440, boxShadow:"0 20px 60px rgba(0,0,0,.12)"}}>
+              {/* 👇 CHANGE THIS src to your own photo URL */}
+              <img src="image/Image1.jpeg" alt="Janvi" style={{width:"100%", height:"100%", objectFit:"cover"}}/>
+            </div>
+            {/* Floating badge overlapping the photo */}
+            <div style={{position:"absolute", bottom:-12, right:-12, background:"#fff", boxShadow:"0 8px 32px rgba(0,0,0,.12)", borderRadius:16, padding:"10px 18px", border:"1px solid #f3f4f6"}}>
+              <span style={{fontSize:13, fontWeight:700, color:"#1f2937"}}> Available for projects</span>
+            </div>
+          </div>
+
+          {/* RIGHT: Bio text */}
+          <div>
+            <h2 style={{fontSize:40, fontWeight:900, color:"#843d6ccd", marginBottom:10}}>About Me</h2>
+
+            {/* Orange underline accent below heading */}
+            <div style={{width:52, height:4, background:"#843d6ccd", borderRadius:99, marginBottom:24}}/>
+
+            {/* Bio paragraphs */}
+            <p style={{color:"#4b5563", lineHeight:1.75, marginBottom:16, fontSize:15}}>
+              I'm Janvi Guleria — I design and build interfaces for web products. I blend product thinking with hands-on front-end development to ship designs that perform in the real world.
+            </p>
+            <p style={{color:"#4b5563", lineHeight:1.75, marginBottom:28, fontSize:15}}>
+              My process focuses on user-first research, rapid prototyping, and measurable outcomes. I work with startups and mid-size product teams to improve conversion, retention, and usability.
+            </p>
+
+            {/* Resume download button */}
+            <button className="btn btn-navy"
+              style={{display:"flex", alignItems:"center", gap:8, padding:"12px 22px", borderRadius:10, fontSize:13, fontWeight:700, marginBottom:36}}>
+              ⬇ Download Janvi's Resume (PDF)
+            </button>
+
+            {/* Animated stats: 50+ Projects, 5+ Years, 98% Satisfaction */}
+            <div className="stats-grid" style={{display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:12}}>
+              {[
+                {v:50, s:"+", l:"Projects Delivered"},
+                {v:5,  s:"+", l:"Years Experience"},
+                {v:98, s:"%", l:"Client Satisfaction"}
+              ].map(s => (
+                <div key={s.l} style={{textAlign:"center"}}>
+                  {/* Counter animates from 0 to value when scrolled into view */}
+                  <p style={{fontSize:32, fontWeight:900, color:"#843d6ccd", margin:0}}>
+                    <Counter end={s.v} suffix={s.s}/>
+                  </p>
+                  <p style={{fontSize:11, color:"#843d6ccd", marginTop:4, fontWeight:500}}>{s.l}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+
+      {/* ==========================================================
+          SKILLS SECTION
+          White background. Two-column layout.
+          Left: animated skill progress bars.
+          Right: tools grid + design process bullet list.
+      ========================================================== */}
+      <section id="skills" style={{padding:"96px 24px", background:"#fff"}}>
+        <div style={{maxWidth:1200, margin:"0 auto"}}>
+
+          {/* Section heading */}
+          <div style={{textAlign:"center", marginBottom:56}}>
+            <h2 style={{fontSize:38, fontWeight:900, color:"#111827", marginBottom:14}}>Skills & Tools</h2>
+            <p style={{color:"#6b7280", maxWidth:480, margin:"0 auto", fontSize:15}}>
+              A blend of design thinking and technical expertise to deliver complete product experiences.
+            </p>
+          </div>
+
+          <div className="skills-grid" style={{display:"grid", gridTemplateColumns:"1fr 1fr", gap:64}}>
+
+            {/* LEFT: Core Skills with animated bars */}
+            <div>
+              <h3 style={{fontSize:17, fontWeight:700, color:"#111827", marginBottom:28}}>Core Skills</h3>
+              {/* Each SkillBar gets its index (i) for staggered animation */}
+              {SKILLS.map((sk, i) => <SkillBar key={sk.name} skill={sk} idx={i}/>)}
+            </div>
+
+            {/* RIGHT: Tools grid + Design Process card */}
+            <div>
+              <h3 style={{fontSize:17, fontWeight:700, color:"#111827", marginBottom:28}}>Tools & Technologies</h3>
+
+              {/* 3-column grid of tool names */}
+              <div style={{display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:"14px 16px", marginBottom:32}}>
+                {TOOLS.map(t => (
+                  <div key={t} style={{fontSize:13, color:"#374151", fontWeight:500, paddingBottom:10, borderBottom:"1px solid #f3f4f6"}}>{t}</div>
+                ))}
+              </div>
+
+              {/* Design Process card */}
+              <div style={{background:"#f9fafb", borderRadius:16, padding:24, border:"1px solid #f3f4f6"}}>
+                <h4 style={{fontWeight:700, color:"#111827", marginBottom:16, fontSize:15}}>Design Process</h4>
+                <div style={{display:"grid", gridTemplateColumns:"1fr 1fr", gap:"10px 0"}}>
+                  {PROCESS.map(item => (
+                    <div key={item} style={{display:"flex", alignItems:"center", gap:8, fontSize:13, color:"#4b5563"}}>
+                      {/* Orange bullet dot */}
+                      <span style={{width:7, height:7, borderRadius:"50%", background:"#843d6ccd", flexShrink:0, display:"inline-block"}}/>
+                      {item}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+
+      {/* ==========================================================
+          WORK / PROJECTS SECTION
+          Gray background. Filter tabs + 3-column project card grid.
+          Clicking a filter tab shows only matching projects.
+      ========================================================== */}
+      <section id="work" style={{padding:"96px 24px", background:"#f9fafb"}}>
+        <div style={{maxWidth:1200, margin:"0 auto"}}>
+
+          {/* Section heading */}
+          <div style={{textAlign:"center", marginBottom:44}}>
+            <h2 style={{fontSize:38, fontWeight:900, color:"#111827", marginBottom:12}}>Featured Work</h2>
+            <p style={{color:"#6b7280", fontSize:15}}>Recent projects where design meets measurable business impact.</p>
+          </div>
+
+          {/* Filter tab buttons */}
+          <div style={{display:"flex", gap:10, flexWrap:"wrap", justifyContent:"center", marginBottom:44}}>
+            {CATS.map(c => (
+              <button key={c}
+                onClick={() => setFilter(c)}  // update active filter
+                className={`filter-btn${filter === c ? " active" : ""}`}  // active class = navy style
+                style={{padding:"8px 20px", borderRadius:99, fontSize:13, fontWeight:600}}>
+                {c}
+              </button>
+            ))}
+          </div>
+
+          {/* Project cards grid — only shows filtered projects */}
+          <div className="projects-grid" style={{display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:28}}>
+            {filtered.map(p => <ProjectCard key={p.id} p={p}/>)}
+          </div>
+        </div>
+      </section>
+
+
+      {/* ==========================================================
+          TESTIMONIALS SECTION
+          White background. 3 client review cards side by side.
+          Each card has a quote, reviewer name/role, and company.
+      ========================================================== */}
+      <section style={{padding:"96px 24px", background:"#fff"}}>
+        <div style={{maxWidth:1200, margin:"0 auto"}}>
+
+          {/* Section heading */}
+          <div style={{textAlign:"center", marginBottom:56}}>
+            <h2 style={{fontSize:38, fontWeight:900, color:"#111827", marginBottom:12}}>What Clients Say</h2>
+            <p style={{color:"#6b7280", fontSize:15}}>Feedback from teams I've had the pleasure to work with.</p>
+          </div>
+
+          {/* 3 testimonial cards */}
+          <div className="testimonials-grid" style={{display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:24}}>
+            {TESTIMONIALS.map(t => (
+              <div key={t.name} className="card" style={{background:"rgb(255,240,250)", borderRadius:18, padding:32, border:"1px solid #f3f4f6"}}>
+                {/* Big quote icon */}
+                <div style={{width:48, height:48, borderRadius:12, background:"rgb(227,193,216)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:22, color:"#6b1b50", margin:"0 auto 20px"}}>❝</div>
+
+                {/* The quote text */}
+                <p style={{color:"#374151", fontSize:13, lineHeight:1.7, textAlign:"center", marginBottom:20, fontStyle:"italic"}}>"{t.quote}"</p>
+
+                {/* Reviewer avatar + name + role */}
+                <div style={{display:"flex", alignItems:"center", gap:12, marginBottom:16}}>
+                  {/* Initials avatar circle */}
+                  <div style={{width:40, height:40, borderRadius:"50%", background:"#6b1b50", display:"flex", alignItems:"center", justifyContent:"center", color:"#fff", fontSize:11, fontWeight:700, flexShrink:0}}>{t.initials}</div>
+                  <div>
+                    <p style={{fontSize:13, fontWeight:700, color:"#111827", margin:0}}>{t.name}</p>
+                    <p style={{fontSize:11, color:"#6b7280", margin:0}}>{t.role}</p>
+                  </div>
+                </div>
+
+                {/* Company name with divider */}
+                <div style={{display:"flex", alignItems:"center", gap:8, paddingTop:14, borderTop:"1px solid #e5e7eb"}}>
+                  <span style={{fontSize:14}}>🏢</span>
+                  <span style={{fontSize:13, fontWeight:600, color:"#843d6ccd"}}>{t.company}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Trust text row */}
+          <div style={{marginTop:52, display:"flex", flexWrap:"wrap", justifyContent:"center", gap:"8px 40px", fontSize:13, color:"#9ca3af", fontWeight:500}}>
+            <span>Trusted by startups and</span>
+            <span>mid-size product teams</span>
+            <span>across various industries</span>
+            <span>worldwide</span>
+          </div>
+        </div>
+      </section>
+
+
+      {/* ==========================================================
+          CONTACT SECTION
+          Gray background. Two-column layout.
+          Left: contact info + budget card.
+          Right: contact form with name, email, type, details fields.
+      ========================================================== */}
+      <section id="contact" style={{padding:"96px 24px", background:"#f9fafb"}}>
+        <div style={{maxWidth:1200, margin:"0 auto"}}>
+
+          {/* Section heading */}
+          <div style={{textAlign:"center", marginBottom:56}}>
+            <h2 style={{fontSize:38, fontWeight:900, color:"#111827", marginBottom:12}}>Let's Work Together</h2>
+            <p style={{color:"#6b7280", maxWidth:500, margin:"0 auto", fontSize:15}}>
+              Have a project in mind? I'd love to hear about it. Let's discuss how we can bring your ideas to life.
+            </p>
+          </div>
+
+          <div className="contact-grid" style={{display:"grid", gridTemplateColumns:"1fr 1.5fr", gap:48, alignItems:"start"}}>
+
+            {/* LEFT: Contact info + budget */}
+            <div>
+              <h3 style={{fontSize:18, fontWeight:700, color:"#111827", marginBottom:24}}>Get in Touch</h3>
+
+              {/* Contact details: Email, Location, Response Time */}
+              <div style={{display:"flex", flexDirection:"column", gap:20, marginBottom:28}}>
+                {[
+                  {icon:"✉️", l:"Email",         v:"janviguleria31@example.com"},
+                  {icon:"📍", l:"Location",      v:"Mohali,Chandigarh"},
+                  {icon:"📞", l:"Response Time", v:"Within 24 hours"}
+                ].map(item => (
+                  <div key={item.l} style={{display:"flex", alignItems:"flex-start", gap:14}}>
+                    {/* Icon box */}
+                    <div style={{width:40, height:40, borderRadius:10, background:"rgba(255,240,250)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:16, flexShrink:0}}>{item.icon}</div>
+                    <div>
+                      <p style={{fontSize:13, fontWeight:700, color:"#111827", margin:0}}>{item.l}</p>
+                      <p style={{fontSize:13, color:"#6b7280", margin:0}}>{item.v}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Project budget card */}
+              <div style={{background:"#fff", borderRadius:16, padding:22, border:"1px solid #f3f4f6", boxShadow:"0 1px 4px rgba(0,0,0,.05)"}}>
+                <h4 style={{fontWeight:700, color:"#111827", marginBottom:14, fontSize:15}}>Project Budget</h4>
+                {["• UX/UI Design: $5k - $15k","• Web Development: $8k - $25k","• Full Product: $15k - $50k"].map(b => (
+                  <p key={b} style={{fontSize:13, color:"#4b5563", margin:"0 0 7px"}}>{b}</p>
+                ))}
+                <p style={{fontSize:11, color:"#9ca3af", fontStyle:"italic", margin:0}}>Exact pricing depends on scope and timeline.</p>
+              </div>
+            </div>
+
+            {/* RIGHT: Contact form */}
+            <div style={{background:"#fff", borderRadius:18, padding:32, border:"1px solid #f3f4f6", boxShadow:"0 1px 8px rgba(0,0,0,.06)"}}>
+              <h3 style={{fontSize:17, fontWeight:700, color:"#111827", marginBottom:24}}>Start a Conversation</h3>
+
+              <div style={{display:"flex", flexDirection:"column", gap:18}}>
+
+                {/* Name + Email fields side by side */}
+                <div className="form-row" style={{display:"grid", gridTemplateColumns:"1fr 1fr", gap:14}}>
+                  <div>
+                    <label style={{fontSize:11, fontWeight:700, color:"#374151", display:"block", marginBottom:6}}>Name *</label>
+                    <input type="text" placeholder="Your full name"
+                      value={form.name} onChange={e => setForm({...form, name:e.target.value})}
+                      style={{width:"100%", border:"1px solid #e5e7eb", borderRadius:10, padding:"12px 14px", fontSize:13, color:"#111827", outline:"none", boxSizing:"border-box"}}/>
+                  </div>
+                  <div>
+                    <label style={{fontSize:11, fontWeight:700, color:"#374151", display:"block", marginBottom:6}}>Email *</label>
+                    <input type="email" placeholder="your@email.com"
+                      value={form.email} onChange={e => setForm({...form, email:e.target.value})}
+                      style={{width:"100%", border:"1px solid #e5e7eb", borderRadius:10, padding:"12px 14px", fontSize:13, color:"#111827", outline:"none", boxSizing:"border-box"}}/>
+                  </div>
+                </div>
+
+                {/* Project type dropdown */}
+                <div>
+                  <label style={{fontSize:11, fontWeight:700, color:"#374151", display:"block", marginBottom:6}}>Project Type *</label>
+                  <select value={form.type} onChange={e => setForm({...form, type:e.target.value})}
+                    style={{width:"100%", border:"1px solid #e5e7eb", borderRadius:10, padding:"12px 14px", fontSize:13, color:form.type?"#111827":"#9ca3af", outline:"none", background:"#fff", appearance:"none"}}>
+                    <option value="">Select project type</option>
+                    <option>UX/UI Design</option>
+                    <option>Web Development</option>
+                    <option>Full Product</option>
+                    <option>Consultation</option>
+                  </select>
+                </div>
+
+                {/* Project details textarea + character count */}
+                <div>
+                  <label style={{fontSize:11, fontWeight:700, color:"#374151", display:"block", marginBottom:6}}>Project Details *</label>
+                  <textarea rows={4} maxLength={500}
+                    placeholder="Tell me about your project, goals, timeline, and any specific requirements..."
+                    value={form.details}
+                    onChange={e => { setForm({...form, details:e.target.value}); setChars(e.target.value.length); }}
+                    style={{width:"100%", border:"1px solid #e5e7eb", borderRadius:10, padding:"12px 14px", fontSize:13, color:"#111827", outline:"none", resize:"none", boxSizing:"border-box"}}/>
+                  {/* Live character counter */}
+                  <p style={{fontSize:11, color:"#9ca3af", margin:"4px 0 0"}}>{chars}/500 characters</p>
+                </div>
+
+                {/* Submit button */}
+                <button className="btn btn-navy"
+                  style={{width:"100%", display:"flex", alignItems:"center", justifyContent:"center", gap:8, padding:"16px", borderRadius:12, fontSize:14, fontWeight:700, boxShadow:"0 4px 16px rgba(27,42,107,.2)"}}>
+                  ✉ Send Message
+                </button>
+
+                {/* Privacy note */}
+                <p style={{fontSize:11, color:"#9ca3af", textAlign:"center", margin:0}}>
+                  By submitting this form, you agree to our privacy policy and terms of service.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+
+      {/* ==========================================================
+          FOOTER
+          Navy/dark blue background. Three columns:
+          1. Brand info + email
+          2. Quick navigation links
+          3. Social icons + location
+          Bottom bar: copyright, policy links, back to top button.
+      ========================================================== */}
+      <footer style={{background:"#6b1b50", color:"#fff"}}>
+
+        {/* Main footer grid */}
+        <div className="footer-grid" style={{maxWidth:1200, margin:"0 auto", padding:"64px 24px", display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:48}}>
+
+          {/* Column 1: Brand */}
+          <div>
+            <h3 style={{fontSize:22, fontWeight:900, marginBottom:4}}>Janvi Guleria</h3>
+            <p style={{fontSize:13, color:"#fff", marginBottom:16}}>Product Designer & Frontend Engineer</p>
+            <p style={{fontSize:13, color:"#fff", lineHeight:1.7, marginBottom:20}}>
+              Designing simple products that scale. I blend product thinking with hands-on development to ship designs that perform in the real world.
+            </p>
+            <div style={{display:"flex", alignItems:"center", gap:8, fontSize:13, color:"#fff"}}>
+              <span>✉</span><span>janviguleria31@example.com</span>
+            </div>
+          </div>
+
+          {/* Column 2: Quick Links */}
+          <div>
+            <h4 style={{fontWeight:700, marginBottom:20, fontSize:15}}>Quick Links</h4>
+            <div style={{display:"flex", flexDirection:"column", gap:12}}>
+              {["About","Work","Skills","Contact"].map(l => (
+                <button key={l} onClick={() => goto(l.toLowerCase())} className="footer-link"
+                  style={{textAlign:"left", background:"transparent", border:"none", cursor:"pointer", fontSize:13, color:"#bfdbfe"}}
+                  onMouseEnter={e => e.currentTarget.style.color="#fff"}
+                  onMouseLeave={e => e.currentTarget.style.color="#fff"}>
+                  {l}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Column 3: Social + Location */}
+          <div>
+            <h4 style={{fontWeight:700, marginBottom:20, fontSize:15}}>Connect</h4>
+            {/* Social icon buttons: LinkedIn, GitHub, Twitter, Website */}
+            <div style={{display:"flex", gap:10, marginBottom:20}}>
+              {[{l:"in",icon:"in"},{l:"gh",icon:"gh"},{l:"tw",icon:"tw"},{l:"gl",icon:"🌐"}].map(s => (
+                <button key={s.l} className="social-icon"
+                  style={{width:40, height:40, borderRadius:10, display:"flex", alignItems:"center", justifyContent:"center", fontSize:13, fontWeight:700}}>
+                  {s.icon}
+                </button>
+              ))}
+            </div>
+            <div style={{display:"flex", flexDirection:"column", gap:8}}>
+              <p style={{fontSize:13, color:"#fff", margin:0}}>📍 Mohali, Chandigarh</p>
+              {/* Green availability dot */}
+              <p style={{fontSize:13, color:"#fff", margin:0, display:"flex", alignItems:"center", gap:6}}>
+                <span style={{width:7, height:7, borderRadius:"50%", background:"#4ade80", display:"inline-block"}}/>
+                Available for projects
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Bottom bar: copyright + policy links + back to top */}
+        <div style={{borderTop:"1px solid rgba(255,255,255,.1)"}}>
+          <div style={{maxWidth:1200, margin:"0 auto", padding:"16px 24px", display:"flex", justifyContent:"space-between", alignItems:"center", flexWrap:"wrap", gap:12}}>
+            <div style={{display:"flex", gap:20, flexWrap:"wrap"}}>
+              <span style={{fontSize:12, color:"#fff"}}>© 2026 Janvi Guleria. All rights reserved.</span>
+              <button style={{fontSize:12, color:"#fff", background:"transparent", border:"none", cursor:"pointer"}}
+                onMouseEnter={e => e.currentTarget.style.color="#fff"} onMouseLeave={e => e.currentTarget.style.color="#fff"}>Privacy Policy</button>
+              <button style={{fontSize:12, color:"#fff", background:"transparent", border:"none", cursor:"pointer"}}
+                onMouseEnter={e => e.currentTarget.style.color="#fff"} onMouseLeave={e => e.currentTarget.style.color="#93c5fd"}>Terms of Service</button>
+            </div>
+            {/* Scroll back to top button */}
+            <button onClick={() => window.scrollTo({top:0, behavior:"smooth"})}
+              style={{display:"flex", alignItems:"center", gap:6, fontSize:12, color:"#fff", background:"transparent", border:"none", cursor:"pointer"}}
+              onMouseEnter={e => e.currentTarget.style.color="#fff"} onMouseLeave={e => e.currentTarget.style.color="#fff"}>
+              ↑ Back to Top
+            </button>
+          </div>
+        </div>
+
+        {/* Very bottom line */}
+        <div style={{borderTop:"1px solid rgba(255,255,255,.08)", padding:"14px 24px", textAlign:"center"}}>
+          <p style={{fontSize:12, color:"#fff", margin:0}}>
+            Built with React, TypeScript, and Tailwind CSS. • Designed with accessibility and performance in mind.
+          </p>
+        </div>
+      </footer>
+
+    </div>
+  );
+}
+
+// ============================================================
+// RENDER THE APP
+// This mounts the entire React App into the <div id="root">
+// This is the last line that actually starts everything.
+// ============================================================
+ReactDOM.render(<App/>, document.getElementById("root"));
+
+</script>
+</body>
+</html>
